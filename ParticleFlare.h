@@ -18,6 +18,7 @@ private:
     byte len;
     byte speed;
     boolean up;
+    byte offset;
 
     int age;
 
@@ -31,13 +32,14 @@ public:
      * @param speed how many cycles to use to fade pixels in. the higher the speed number the slower the flare
      * @param up whether to animate the flare from high to low index
      */
-    void init(CStateFlare *state, int startage, byte column, byte flare_len, byte speed, boolean up)
+    void init(CStateFlare *state, byte offset, byte column, byte flare_len, byte speed, boolean up)
     {
+        CParticleFlare::offset = offset;
         CParticleFlare::column = column;
         CParticleFlare::state = state;
         CParticleFlare::speed = speed;
         len = flare_len;
-        age = startage;
+        age = offset*speed;
         CParticleFlare::up = up;
     }
     bool alive()
@@ -68,7 +70,7 @@ public:
         float step = 1.0/len;
         CRGB color;
         CRGB c = state->getColor();
-        for (byte i = max(0, pos - len); i < min(pos, LENGTH); i++) {
+        for (byte i = max(offset, pos - len); i < min(pos, LENGTH); i++) {
             float factor = ++rel*step - fade*step; // this could be a better function than just linear
 
             if (factor < FLARE_COLOR_FACTOR) {

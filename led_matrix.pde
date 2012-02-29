@@ -34,7 +34,6 @@
   #define STRIPS 10
 #else
   #define LENGTH 156
-  // number of strips
   #define STRIPS 1
 #endif
 
@@ -61,7 +60,7 @@ IState* current_state, *extra_state, *old_state, *old_extra_state;
 
 
 unsigned long state_start;
-unsigned int state_duration = 5*1000; //could be controlled
+unsigned int state_duration = 60*1000; //could be controlled
 unsigned long frame_start;
 /** how long one frame should take, in milliseconds. controlled with potentiometer */
 byte frame_duration = 30;
@@ -95,7 +94,7 @@ SParticleGlimmer ExtraGlimmers[EXTRA_GLIMMERS_COUNT];
 CStateGlimmer StateGlimmer((CRGB) {255, 255, 255}, MainGlimmers, MAIN_GLIMMERS_COUNT);
 CStateGlimmer StateGlimmerExtra((CRGB) {255, 0, 255}, ExtraGlimmers, EXTRA_GLIMMERS_COUNT);
 
-CStateGlimmer StateGreen((CRGB) {12, 210, 16}, ExtraGlimmers, EXTRA_GLIMMERS_COUNT);
+CStateGlimmer StateGreen((CRGB) {17, 255, 88}, ExtraGlimmers, EXTRA_GLIMMERS_COUNT);
 CStateGlimmer StateGreenExtra((CRGB) {15, 235, 210}, MainGlimmers, MAIN_GLIMMERS_COUNT);
 
 /*** rainbow ***/
@@ -213,10 +212,10 @@ void stateCheck()
             extra_state = &StateFlareupExtra;
         } else if (&StateFlareup == current_state) {
             current_state = &StateBlink;
-            extra_state = &StateGlimmerExtra;
+            extra_state = NULL;
         } else if (&StateBlink == current_state) {
             current_state = &StateGlimmer;
-            extra_state = NULL;
+            extra_state = &StateGlimmerExtra;
         } else if (&StateGlimmer == current_state) {
             current_state = &StateFlare;
             extra_state = &StateFlareExtra;

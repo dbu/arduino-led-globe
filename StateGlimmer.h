@@ -135,7 +135,7 @@ public:
 
             for(byte i=0; i<STRIPS; i++) {
                 for (byte j=0; j<LENGTH; j++) {
-                    if (phase == PHASE_INTRO) {
+                    if (PHASE_INTRO == phase) {
                         m.blend(i, j, bgcolor, fade / float(GLIMMER_FULL));
                     } else {
                         // FADEOUT

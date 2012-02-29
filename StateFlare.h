@@ -109,12 +109,11 @@ protected:
                         default:
                             return phase; // abort
                     }
-                    int startage = 0;
-                    byte speed = random(5,9);
+                    byte offset = 0;
                     #ifndef MATRIX
-                    startage = random(0, LENGTH*speed);
+                    offset = random(0, LENGTH/2);
                     #endif
-                    flares[i].init(this, startage, col, random(3,10), speed, this->isUp()); // age ist maximal (16+9)*10 + 1 => 251 < 255 (/)
+                    flares[i].init(this, offset, col, random(3,10), random(5,9), this->isUp());
                     alive = true;
                 }
             } else {

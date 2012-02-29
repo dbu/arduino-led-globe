@@ -12,6 +12,7 @@ class CStateRainbow : public IState
 private:
     byte phase;
     byte age;
+    byte movein;
 
 public:
     /**
@@ -34,28 +35,44 @@ public:
     void setPhase(byte phase)
     {
         if (phase == PHASE_INTRO) {
-            phase = PHASE_MAIN;
+            age = 0;
+            movein = 0;
         }
         CStateRainbow::phase = phase;
     }
     byte live() 
-    {
+    {   
+        if (PHASE_INTRO == phase) {
+            movein += 3;
+            if (movein >= LENGTH) {
+                phase = PHASE_MAIN;
+            }
+        }
         if (++age > DIVISOR*2) {
             age = 0;
         }
         return phase;
     }
     
+    void drawRainbow(CLedMatrix &m)
+    {
+        for (byte s = 0; s<STRIPS; s++) {
+            for (byte l = 0; l < min(movein, LENGTH); l++) {
+                m.set(s, l, HSVtoRGB(6 * fmod((age*.5+LENGTH-l-1)/DIVISOR, 1), 1, 1));
+            }
+        }
+    }
+    
     void drawBackground(CLedMatrix &m, IState* old_state)
     {
+        if (PHASE_FADEOUT == phase) {
+            drawRainbow(m);
+        }
     }
     void drawParticles(CLedMatrix &m)
     {
-        Serial.println(fmod((age*.25)/DIVISOR, 1));
-        for (byte s = 0; s<STRIPS; s++) {
-            for (byte l = 0; l < LENGTH; l++) {
-                m.set(s, l, HSVtoRGB(6 * fmod((age*0.5+l)/DIVISOR, 1), (PHASE_FADEOUT == phase) ? .1 : 1, .1));
-            }
+        if (PHASE_INTRO == phase || PHASE_MAIN == phase) {
+            drawRainbow(m);
         }
     }
     
