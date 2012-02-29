@@ -4,6 +4,7 @@
  * SD (green or red) = SPI data (master to slave, MOSI), pin 11
  * GND (blue) = Ground
  *
+ * on mega: CK 52, SD 51
  *
  * various states, one is used as main state.
  *
@@ -11,6 +12,8 @@
  *
  * fade over between states: while current_state is in phase intro, just draw particles.
  * once its in main, draw both particle and background.
+ *
+ * seeeduino mega = ATmega1280, otherwise ATmega328
  */
 
 //#define DEBUG
@@ -18,13 +21,22 @@
 
 #include <FastSPI_LED.h>
 #include <LedMatrix.h>
+#include <math.h>
 #include "State.h"
 
-/*** configuration ***/
-// strip length
-#define LENGTH 16
-// number of strips
-#define STRIPS 10
+//#define MATRIX
+
+#ifdef MATRIX
+  /*** configuration ***/
+  // strip length
+  #define LENGTH 16
+  // number of strips
+  #define STRIPS 10
+#else
+  #define LENGTH 156
+  // number of strips
+  #define STRIPS 1
+#endif
 
 #define SENSOR_PIN A0
 
@@ -35,6 +47,8 @@ struct CRGB *leds;
 #define STATE_FLARE 1
 #define STATE_FLARE_UP 2
 #define STATE_GLIMMER 4
+#define STATE_RAINBOW 5
+#define STATE_BLINK 6
 #define STATE_COLOR 99
 
 #define PHASE_INTRO 1
@@ -49,7 +63,7 @@ IState* current_state, *extra_state, *old_state, *old_extra_state;
 unsigned long state_start;
 unsigned int state_duration = 45*1000; //could be controlled
 unsigned long frame_start;
-/** how long one frame should take */
+/** how long one frame should take, in milliseconds */
 byte frame_duration = 30;
 
 
@@ -84,13 +98,21 @@ CStateGlimmer StateGlimmerExtra((CRGB) {255, 0, 255}, ExtraGlimmers, EXTRA_GLIMM
 CStateGlimmer StateGreen((CRGB) {12, 210, 16}, MainGlimmers, 0);
 CStateGlimmer StateGreenExtra((CRGB) {15, 235, 210}, MainGlimmers, MAIN_GLIMMERS_COUNT);
 
+/*** rainbow ***/
+#include "StateRainbow.h"
+CStateRainbow StateRainbow(1);
+
+/*** blink ***/
+#include "StateBlink.h"
+CStateBlink StateBlink((CRGB) {208, 241, 47});
+
 /*** static color ***/
 #include "StateColor.h"
-CStateColor StateColor((CRGB) {0, 255, 0});
+CStateColor StateColor((CRGB) {208, 241, 47});
 
 void setup()
 {
-//    Serial.begin(9600);
+    // Serial.begin(9600);
 
     LedMatrix.init(LENGTH, STRIPS, true);
     FastSPI_LED.setChipset(CFastSPI_LED::SPI_WS2801);
@@ -110,8 +132,8 @@ void setup()
     current_state->setPhase(PHASE_INTRO);
 
     extra_state = & StateGreenExtra;
-    extra_state->setPhase(PHASE_INTRO);
-    
+    extra_state->setPhase(PHASE_EXTRA);
+
     //Serial.print("freeMemory()=");
     //Serial.println(freeMemory());
 }
@@ -178,12 +200,20 @@ void stateCheck()
             old_extra_state = extra_state;
             extra_state = &StateGlimmerExtra;
             current_state = &StateGlimmer;
+        } else if (&StateFlareup == current_state) {
+            old_state = current_state;
+            old_extra_state = extra_state;
+            current_state = &StateBlink;
         } else if (&StateGlimmer == current_state) {
             old_state = current_state;
             old_extra_state = extra_state;
             current_state = &StateFlare;
             extra_state = &StateFlareExtra;
         } else if (&StateFlare == current_state) {
+            old_state = current_state;
+            old_extra_state = extra_state;
+            current_state = &StateRainbow;
+        } else if (&StateRainbow == current_state) {
             old_state = current_state;
             old_extra_state = extra_state;
             current_state = &StateGreen;

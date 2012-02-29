@@ -92,7 +92,11 @@ protected:
                             col = columns[columns_pos++];
                             if (columns_pos == STRIPS) {
                                 toWatch = &flares[i];
-                                toWatch->init(this, col, random(5,8), random(6,8));
+                                #ifdef MATRIX
+                                toWatch->init(this, col, random(5,8), random(6,8), this->isUp());
+                                #else
+                                toWatch->init(this, col, 12, 1, this->isUp());
+                                #endif
                                 return phase;
                             }
                             break;
@@ -105,7 +109,7 @@ protected:
                         default:
                             return phase; // abort
                     }
-                    flares[i].init(this, col, random(3,10), random(5,9)); // age ist maximal (16+9)*10 + 1 => 251 < 255 (/)
+                    flares[i].init(this, col, random(3,10), random(5,9), this->isUp()); // age ist maximal (16+9)*10 + 1 => 251 < 255 (/)
                     alive = true;
                 }
             } else {
@@ -148,7 +152,11 @@ protected:
     }
     boolean CStateFlare::isUp()
     {
+        #ifdef MATRIX
         return false;
+        #else
+        return random(2); //0 or 1
+        #endif
     }
     
     void CStateFlare::restart()

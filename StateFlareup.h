@@ -19,7 +19,11 @@ class CStateFlareup : public CStateFlare
       }
       boolean isUp()
       {
-          return true;
+        #ifdef MATRIX
+        return true;
+        #else
+        return random(2); //0 or 1
+        #endif
       }
 
 };

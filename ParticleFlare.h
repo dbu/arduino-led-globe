@@ -5,7 +5,7 @@
 #include <LedMatrix.h>
 #include "Particle.h"
 
-#define POS(i) (state->isUp() ? LENGTH - 1 - i : i)
+#define POS(i) (up ? LENGTH - 1 - i : i)
 
 class CParticleFlare : public IParticle
 {
@@ -17,6 +17,7 @@ private:
     byte column;
     byte len;
     byte speed;
+    boolean up;
 
     byte age;
 
@@ -26,13 +27,18 @@ public:
         speed = 1;
         age = 255;
     }
-    void init(CStateFlare *state, byte column, byte flare_len, byte speed)
+    /**
+     * @param speed how many cycles to use to fade pixels in. the higher the speed number the slower the flare
+     * @param up whether to animate the flare from high to low index
+     */
+    void init(CStateFlare *state, byte column, byte flare_len, byte speed, boolean up)
     {
         CParticleFlare::column = column;
         CParticleFlare::state = state;
         CParticleFlare::speed = speed;
         len = flare_len;
         age = 0;
+        CParticleFlare::up = up;
     }
     bool alive()
     {
