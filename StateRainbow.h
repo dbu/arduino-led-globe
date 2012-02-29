@@ -4,7 +4,7 @@
 #ifdef MATRIX
 #define DIVISOR float(LENGTH)
 #else
-#define DIVISOR float(LENGTH/8)
+#define DIVISOR 20.0
 #endif
 
 class CStateRainbow : public IState
@@ -43,6 +43,7 @@ public:
         if (++age > DIVISOR*2) {
             age = 0;
         }
+        return phase;
     }
     
     void drawBackground(CLedMatrix &m, IState* old_state)
@@ -53,7 +54,7 @@ public:
         Serial.println(fmod((age*.25)/DIVISOR, 1));
         for (byte s = 0; s<STRIPS; s++) {
             for (byte l = 0; l < LENGTH; l++) {
-                m.set(s, l, HSVtoRGB(6 * fmod((age*0.5+l)/DIVISOR, 1), 1, .1));
+                m.set(s, l, HSVtoRGB(6 * fmod((age*0.5+l)/DIVISOR, 1), (PHASE_FADEOUT == phase) ? .1 : 1, .1));
             }
         }
     }

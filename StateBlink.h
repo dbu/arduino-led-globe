@@ -6,10 +6,13 @@ class CStateBlink : public IState
 private:
     byte phase;
     byte age;
+    boolean step;
+    CRGB color;
 
 public:
     CStateBlink(CRGB color)
     {
+        CStateBlink::color = color;
     }
     byte getType() 
     {
@@ -36,27 +39,25 @@ public:
 
     byte live() 
     {
-        if (++age == 6) age = 0;
+        if (++age >= 4) {
+            age = 0;
+            step = ! step;
+        }
+        return phase;
     }
     
     void drawBackground(CLedMatrix &m, IState* old_state)
     {
         byte pixels = STRIPS*LENGTH;
         memset(leds, 0, pixels * 3);
-        byte shift = age % 2;
-        byte pos = age / 2;
-        for(int i = 0; i < pixels; i++ ) {
-            if (shift && i == pixels-2) {
-                switch((i+pos) % 3) {
-                  case 0: leds[pixels-1].r = 100; leds[0].r = 100; break;
-                  case 1: leds[pixels-1].b = 100; leds[0].b = 100; break;
-                  case 2: leds[pixels-1].g = 100; leds[0].g = 100; break;
-                }
-            } else {
-                switch((i+pos) % 3) {
-                  case 0: leds[shift+i++].r = 100; leds[shift+i].r = 100; break;
-                  case 1: leds[shift+i++].b = 100; leds[shift+i].b = 100; break;
-                  case 2: leds[shift+i++].g = 100; leds[shift+i].g = 100; break;
+        byte shift = step % 8;
+        byte pos = age / 8;
+        for(int s = 0; s < STRIPS; s++ ) {
+            for (int l = 0; l < LENGTH; l++) {
+                if ((s*LENGTH+l+step) % 2 == 0) {
+                    m.set(s, l, (CRGB) {220, 15, 149});
+                } else {
+                    m.set(s, l, color);
                 }
             }
         }

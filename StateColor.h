@@ -31,8 +31,6 @@ public:
     {
         if (phase == PHASE_INTRO) {
             phase = PHASE_MAIN;
-        } else if (phase == PHASE_FADEOUT) {
-            phase = PHASE_DONE;
         }
         CStateColor::phase = phase;
     }

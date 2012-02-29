@@ -19,25 +19,25 @@ private:
     byte speed;
     boolean up;
 
-    byte age;
+    int age;
 
 public:
     CParticleFlare()
     {
         speed = 1;
-        age = 255;
+        age = 32000;
     }
     /**
      * @param speed how many cycles to use to fade pixels in. the higher the speed number the slower the flare
      * @param up whether to animate the flare from high to low index
      */
-    void init(CStateFlare *state, byte column, byte flare_len, byte speed, boolean up)
+    void init(CStateFlare *state, int startage, byte column, byte flare_len, byte speed, boolean up)
     {
         CParticleFlare::column = column;
         CParticleFlare::state = state;
         CParticleFlare::speed = speed;
         len = flare_len;
-        age = 0;
+        age = startage;
         CParticleFlare::up = up;
     }
     bool alive()
