@@ -43,7 +43,11 @@ public:
     byte live() 
     {   
         if (PHASE_INTRO == phase) {
-            movein += 3;
+            #ifdef MATRIX
+                movein += 1;
+            #else
+                movein += 3;
+            #endif
             if (movein >= LENGTH) {
                 phase = PHASE_MAIN;
             }

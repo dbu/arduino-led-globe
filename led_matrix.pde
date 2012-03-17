@@ -24,7 +24,7 @@
 #include <math.h>
 #include "State.h"
 
-//#define MATRIX
+#define MATRIX
 
 #ifdef MATRIX
   /*** configuration ***/
@@ -71,7 +71,7 @@ byte frame_duration = 30;
 #include "StateFlareup.h"
 
 #define MAIN_FLARES_COUNT 7
-#define EXTRA_FLARES_COUNT 5
+#define EXTRA_FLARES_COUNT 4
 
 CParticleFlare MainFlares[MAIN_FLARES_COUNT];
 CParticleFlare ExtraFlares[EXTRA_FLARES_COUNT];
@@ -126,17 +126,18 @@ void setup()
     state_start = millis();
 
     #ifdef MATRIX
-    current_state = & StateGreen;
-    current_state->setPhase(PHASE_INTRO);
-    extra_state = & StateGreenExtra;
-    extra_state->setPhase(PHASE_EXTRA);
+        current_state = & StateGreen;
+        current_state->setPhase(PHASE_INTRO);
+        extra_state = & StateGreenExtra;
+        extra_state->setPhase(PHASE_EXTRA);
     #else
-    current_state = &StateColor;
-    current_state->setPhase(PHASE_INTRO);
+        current_state = &StateColor;
+        current_state->setPhase(PHASE_INTRO);
     #endif
 
     Serial.begin(9600);
-    Serial.print("freeMemory()=");
+    Serial.println("STARTUP");
+    Serial.print("mem=");
     Serial.println(freeMemory());
 }
 
@@ -228,7 +229,6 @@ void stateCheck()
         }
         current_state->setPhase(PHASE_INTRO);
         if (extra_state != NULL) extra_state->setPhase(PHASE_EXTRA);
-        
     }
     if (NULL != old_state && old_state->getPhase() == PHASE_DONE) {
         old_state = NULL;

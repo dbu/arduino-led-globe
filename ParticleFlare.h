@@ -5,7 +5,7 @@
 #include <LedMatrix.h>
 #include "Particle.h"
 
-#define POS(i) (up ? LENGTH - 1 - i : i)
+#define POS(i) (up ? i : LENGTH - 1 - i)
 
 class CParticleFlare : public IParticle
 {
