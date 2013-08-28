@@ -24,7 +24,8 @@
 #include <math.h>
 #include "State.h"
 
-#define MATRIX
+//#define MATRIX
+#define WALL
 
 #ifdef MATRIX
   /*** configuration ***/
@@ -33,11 +34,17 @@
   // number of strips
   #define STRIPS 10
 #else
-  #define LENGTH 156
-  #define STRIPS 1
+  #ifdef WALL
+    #define LENGTH 144
+    #define STRIPS 1
+  #else
+    #define LENGTH 156
+    #define STRIPS 1
+  #endif
 #endif
 
-#define SENSOR_PIN A0
+#define SPEED_PIN A0
+#define MODE_PIN 4
 
 /*** general variables ***/
 CLedMatrix LedMatrix;
@@ -48,6 +55,7 @@ struct CRGB *leds;
 #define STATE_GLIMMER 4
 #define STATE_RAINBOW 5
 #define STATE_BLINK 6
+#define STATE_LIGHTNING 7
 #define STATE_COLOR 99
 
 #define PHASE_INTRO 1
@@ -105,12 +113,19 @@ CStateRainbow StateRainbow(1);
 #include "StateBlink.h"
 CStateBlink StateBlink((CRGB) {17, 255, 88});
 
+#include "StateLightning.h"
+CStateLightning StateLightning((CRGB) {255,255,255});
+
 /*** static color ***/
 #include "StateColor.h"
 CStateColor StateColor((CRGB) {17, 255, 88});
 
 void setup()
 {
+    #ifdef WALL
+        pinMode(MODE_PIN, INPUT);
+    #endif
+
     LedMatrix.init(LENGTH, STRIPS, true);
     FastSPI_LED.setChipset(CFastSPI_LED::SPI_WS2801);
 
@@ -129,10 +144,19 @@ void setup()
         current_state = & StateGreen;
         current_state->setPhase(PHASE_INTRO);
         extra_state = & StateGreenExtra;
+
         extra_state->setPhase(PHASE_EXTRA);
     #else
+      #ifdef WALL
+        current_state = & StateGreen;
+        current_state->setPhase(PHASE_INTRO);
+        extra_state = & StateGreenExtra;
+
+        extra_state->setPhase(PHASE_EXTRA);
+      #else
         current_state = &StateColor;
         current_state->setPhase(PHASE_INTRO);
+      #endif
     #endif
 
     Serial.begin(9600);
@@ -171,7 +195,7 @@ void loop() {
     if (NULL != old_extra_state) {
         old_extra_state->drawParticles(LedMatrix);
     }
-    
+
     if (current_state->getPhase() == PHASE_MAIN || current_state->getPhase() == PHASE_FADEOUT) {
         if (NULL != extra_state) {
             extra_state->live();
@@ -182,7 +206,7 @@ void loop() {
     current_state->drawParticles(LedMatrix);
 
     FastSPI_LED.show();
-    
+
     stateCheck();
 
     if (millis() - frame_start < frame_duration) {
@@ -198,37 +222,68 @@ void stateCheck()
      if (millis() - state_start > state_duration) {
         state_start = millis();
 
-        current_state->setPhase(PHASE_FADEOUT);
-        if (extra_state != NULL) {
-            extra_state->setPhase(PHASE_FADEOUT);
-        }
-        
         old_state = current_state;
         old_extra_state = extra_state;
-        if (&StateColor == current_state) {
-            current_state = &StateGreen;
-            extra_state = &StateGreenExtra;
-        } else if (&StateGreen == current_state) {
-            current_state = &StateFlareup;
-            extra_state = &StateFlareupExtra;
-        } else if (&StateFlareup == current_state) {
-            current_state = &StateBlink;
-            extra_state = NULL;
-        } else if (&StateBlink == current_state) {
-            current_state = &StateGlimmer;
-            extra_state = &StateGlimmerExtra;
-        } else if (&StateGlimmer == current_state) {
-            current_state = &StateFlare;
-            extra_state = &StateFlareExtra;
-        } else if (&StateFlare == current_state) {
-            current_state = &StateRainbow;
-            extra_state = NULL;
-        } else if (&StateRainbow == current_state) {
-            current_state = &StateGreen;
-            extra_state = &StateGreenExtra;
+
+        #ifdef WALL
+          if (digitalRead(MODE_PIN)) {
+              if (current_state == &StateGreen) {
+                  // no need to change
+                  return;
+              }
+              current_state = &StateGreen;
+              extra_state = &StateGreenExtra;
+          } else {
+              if (&StateGreen == current_state) {
+                  current_state = &StateLightning;
+                  extra_state = NULL;
+              } else if (&StateLightning == current_state) {
+                  current_state = &StateFlareup;
+                  extra_state = &StateFlareupExtra;
+              } else if (&StateFlareup == current_state) {
+                  current_state = &StateGlimmer;
+                  extra_state = &StateGlimmerExtra;
+              } else if (&StateGlimmer == current_state) {
+                  current_state = &StateFlare;
+                  extra_state = &StateFlareExtra;
+              } else if (&StateFlare == current_state) {
+                  current_state = &StateRainbow;
+                  extra_state = NULL;
+              } else { //(&StateRainbow == current_state)
+                  current_state = &StateGreen;
+                  extra_state = &StateGreenExtra;
+              }
+          }
+        #else
+          if (&StateGreen == current_state) {
+              current_state = &StateFlareup;
+              extra_state = &StateFlareupExtra;
+          } else if (&StateFlareup == current_state) {
+              current_state = &StateBlink;
+              extra_state = NULL;
+          } else if (&StateBlink == current_state) {
+              current_state = &StateGlimmer;
+              extra_state = &StateGlimmerExtra;
+          } else if (&StateGlimmer == current_state) {
+              current_state = &StateFlare;
+              extra_state = &StateFlareExtra;
+          } else if (&StateFlare == current_state) {
+              current_state = &StateRainbow;
+              extra_state = NULL;
+          } else { //(&StateRainbow == current_state)
+              current_state = &StateGreen;
+              extra_state = &StateGreenExtra;
+          }
+        #endif
+
+        old_state->setPhase(PHASE_FADEOUT);
+        if (old_extra_state != NULL) {
+            old_extra_state->setPhase(PHASE_FADEOUT);
         }
         current_state->setPhase(PHASE_INTRO);
-        if (extra_state != NULL) extra_state->setPhase(PHASE_EXTRA);
+        if (extra_state != NULL) {
+            extra_state->setPhase(PHASE_EXTRA);
+        }
     }
     if (NULL != old_state && old_state->getPhase() == PHASE_DONE) {
         old_state = NULL;
@@ -256,13 +311,13 @@ void shuffle(byte* arr, byte len)
  */
 void readDuration()
 {
-    #ifdef MATRIX
+    #if defined(MATRIX) || defined(WALL)
     // analog pin measures 0 - 1023 => map to 2 - 80
-    frame_duration = 2 + analogRead(SENSOR_PIN) / 12.8;
+    frame_duration = 2 + analogRead(SPEED_PIN) / 12.8;
     #endif
 }
 
-/** seems we can mess up function stack, try to print each loop something 
+/** seems we can mess up function stack, try to print each loop something
 void heartbeat()
 {
 //    DEBUG_PRINT("Babump");

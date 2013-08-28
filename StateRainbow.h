@@ -86,7 +86,7 @@ public:
      * @param s saturation
      * @param v value (dark to light)
      */
-    CRGB HSVtoRGB(float h, float s, float v)
+    static CRGB HSVtoRGB(float h, float s, float v)
     {
         // H is given on [0->6] or -1. S and V are given on [0->1].
         float f;
