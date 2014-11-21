@@ -24,8 +24,8 @@
 #include <math.h>
 #include "State.h"
 
-//#define MATRIX
-#define WALL
+#define MATRIX
+//#define WALL
 
 #ifdef MATRIX
   /*** configuration ***/
@@ -56,6 +56,7 @@ struct CRGB *leds;
 #define STATE_RAINBOW 5
 #define STATE_BLINK 6
 #define STATE_LIGHTNING 7
+#define STATE_AMBIENT 8
 #define STATE_COLOR 99
 
 #define PHASE_INTRO 1
@@ -120,6 +121,11 @@ CStateLightning StateLightning((CRGB) {255,255,255});
 #include "StateColor.h"
 CStateColor StateColor((CRGB) {17, 255, 88});
 
+#ifdef WALL
+#include "StateAmbient.h"
+CStateAmbient StateAmbient;
+#endif
+
 void setup()
 {
     #ifdef WALL
@@ -148,11 +154,15 @@ void setup()
         extra_state->setPhase(PHASE_EXTRA);
     #else
       #ifdef WALL
-        current_state = & StateGreen;
-        current_state->setPhase(PHASE_INTRO);
-        extra_state = & StateGreenExtra;
+        if (digitalRead(MODE_PIN)) {
+            current_state = & StateAmbient;
+        } else {
+            current_state = & StateGreen;
+            current_state->setPhase(PHASE_INTRO);
+            extra_state = & StateGreenExtra;
 
-        extra_state->setPhase(PHASE_EXTRA);
+            extra_state->setPhase(PHASE_EXTRA);
+        }
       #else
         current_state = &StateColor;
         current_state->setPhase(PHASE_INTRO);
@@ -227,12 +237,12 @@ void stateCheck()
 
         #ifdef WALL
           if (digitalRead(MODE_PIN)) {
-              if (current_state == &StateGreen) {
+              if (current_state == &StateAmbient) {
                   // no need to change
                   return;
               }
-              current_state = &StateGreen;
-              extra_state = &StateGreenExtra;
+              current_state = &StateAmbient;
+              extra_state = NULL;
           } else {
               if (&StateGreen == current_state) {
                   current_state = &StateLightning;

@@ -82,7 +82,8 @@ public:
     
     /**
      * found somewhere on the internets
-     * @param h the hue, in radians
+     *
+     * @param h the hue, in pseudo-radians from 0-6
      * @param s saturation
      * @param v value (dark to light)
      */
